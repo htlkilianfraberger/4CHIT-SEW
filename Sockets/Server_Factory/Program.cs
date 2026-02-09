@@ -21,16 +21,22 @@ void HandleRequest(Socket soc)
         using (Stream s = new NetworkStream(soc))
         {
             StreamReader sr = new StreamReader(s);
-            string request = sr.ReadLine();
+            string? request = sr.ReadLine();
             if (string.IsNullOrEmpty(request)) return;
-
-            Console.WriteLine($"Anfrage: {request}");
 
             var parts = request.Split(' ');
             if (parts.Length < 2) return;
             
-            string fileName = parts[1].TrimStart('/'); 
-            string extension = Path.GetExtension(fileName).ToLower();
+            string rawPath = parts[1].TrimStart('/'); 
+            if (string.IsNullOrEmpty(rawPath)) rawPath = "index.html";
+
+            if (rawPath.Contains("..")) 
+            {
+                ResponseFactory.SendStaticError(s, 403, "Forbidden", "Zugriff verweigert.");
+                return;
+            }
+
+            string extension = Path.GetExtension(rawPath).ToLower();
             
             ResponseFactory factory = extension switch
             {
@@ -44,7 +50,7 @@ void HandleRequest(Socket soc)
                 _                 => new TextResponseFactory("text/plain") 
             };
 
-            factory.SendResponse(s, fileName);
+            factory.SendResponse(s, rawPath);
         }
     }
     catch (Exception ex)
@@ -65,24 +71,36 @@ abstract class ResponseFactory
             return;
         }
 
-        byte[] data = PrepareData(filePath);
-        
-        StringBuilder sb = new StringBuilder();
-        sb.Append("HTTP/1.1 200 OK\r\n");
-        sb.Append($"Content-Type: {ContentType}\r\n");
-        sb.Append($"Content-Length: {data.Length}\r\n");
-        sb.Append("Connection: close\r\n\r\n");
+        try 
+        {
+            byte[] data = PrepareData(filePath);
+            
+            string header = $"HTTP/1.1 200 OK\r\n" +
+                            $"Content-Type: {ContentType}\r\n" +
+                            $"Content-Length: {data.Length}\r\n" +
+                            "Connection: close\r\n\r\n";
 
-        byte[] headerBytes = Encoding.UTF8.GetBytes(sb.ToString());
-
-        s.Write(headerBytes, 0, headerBytes.Length);
-        s.Write(data, 0, data.Length);
-        s.Flush();
+            s.Write(Encoding.UTF8.GetBytes(header));
+            s.Write(data);
+            s.Flush();
+        }
+        catch
+        {
+            SendError(s, 500, "Internal Server Error", "Fehler beim Lesen der Datei.");
+        }
     }
 
     protected abstract byte[] PrepareData(string filePath);
 
     private void SendError(Stream s, int code, string status, string msg)
+    {
+        byte[] body = Encoding.UTF8.GetBytes($"<html><body><h1>{code} {status}</h1><p>{msg}</p></body></html>");
+        string head = $"HTTP/1.1 {code} {status}\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n";
+        s.Write(Encoding.UTF8.GetBytes(head));
+        s.Write(body);
+    }
+
+    public static void SendStaticError(Stream s, int code, string status, string msg)
     {
         byte[] body = Encoding.UTF8.GetBytes($"<h1>{code} {status}</h1><p>{msg}</p>");
         string head = $"HTTP/1.1 {code} {status}\r\nContent-Type: text/html\r\nContent-Length: {body.Length}\r\n\r\n";
@@ -91,20 +109,15 @@ abstract class ResponseFactory
     }
 }
 
-class BinaryResponseFactory : ResponseFactory
+class BinaryResponseFactory(string mime) : ResponseFactory
 {
-    private readonly string _mime;
-    public BinaryResponseFactory(string mime) => _mime = mime;
-    public override string ContentType => _mime;
-
+    public override string ContentType => mime;
     protected override byte[] PrepareData(string filePath) => File.ReadAllBytes(filePath);
 }
 
-class TextResponseFactory : ResponseFactory
+class TextResponseFactory(string mime) : ResponseFactory
 {
-    private readonly string _mime;
-    public TextResponseFactory(string mime) => _mime = mime;
-    public override string ContentType => _mime + "; charset=utf-8";
+    public override string ContentType => $"{mime}; charset=utf-8";
     protected override byte[] PrepareData(string filePath)
     {
         string textContent = File.ReadAllText(filePath);
