@@ -4,9 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 
+using Blogging;
+
 using var db = new BloggingContext();
 
-// Hier lag der Fehler: Jetzt synchron aufrufen, passend zu UseSeeding
+
+Blog sew = new Blog { BlogId = 1 };
+Post post = new Post { PostId = 1, BlogId = 1, Title = "Suppa" };
+
+post.Blog = sew; // geht nur mit Navigation Property
+
+Console.Write(post.Blog.BlogId);
+
 db.Database.EnsureCreated();
 
 Console.WriteLine("--- Blog & Post System Bereit ---");
@@ -27,8 +36,7 @@ while (running)
             foreach (var b in blogs)
             {
                 Console.WriteLine($"- [{b.BlogId}] {b.Url}");
-        
-                // Anzeige der Posts unter dem jeweiligen Blog
+                
                 if (b.Posts.Any())
                 {
                     foreach (var p in b.Posts)
@@ -121,13 +129,10 @@ public class BloggingContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // MySQL Verbindungseinstellungen
-        // Ersetze 'root' und 'insy' durch deine tatsächlichen Daten, falls nötig.
         optionsBuilder.UseMySQL(@"Server=127.0.0.1;uid=root;pwd=insy;database=blogging");
-        //Data Seeding
+
         optionsBuilder.UseSeeding((context, _) =>
         {
-            // 1. Bestehende Daten bereinigen (optional, Vorsicht in Produktion!)
             var existingBlogs = context.Set<Blog>().ToList();
             if (existingBlogs.Any())
             {
@@ -136,15 +141,13 @@ public class BloggingContext : DbContext
             }
 
             var b1 = context.Set<Blog>();
-
-            // 2. Neue Testdaten hinzufügen
+            
             context.Set<Blog>().Add(new Blog { Url = "http://test.at" });
             context.Set<Blog>().Add(new Blog { Url = "http://test.de" });
             context.Set<Blog>().Add(new Blog { Url = "http://test.ch" });
             
             b1.Add(new Blog { Url = "http://test.net" });
-
-            // 3. Blog mit zugehörigem Post erstellen
+            
             var comBlog = new Blog { Url = "http://test.com" };
             context.Set<Blog>().Add(comBlog);
 
@@ -153,27 +156,8 @@ public class BloggingContext : DbContext
                 Title = "asdf", 
                 Content = "Dachkatzl" 
             });
-
-            // 4. Änderungen in der Datenbank speichern
-            context.SaveChanges(); //commit
+            
+            context.SaveChanges();
         });
     }
-}
-
-public class Blog
-{
-    public int BlogId { get; set; }
-    public string Url { get; set; } = string.Empty;
-
-    public List<Post> Posts { get; } = new();
-}
-
-public class Post
-{
-    public int PostId { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string Content { get; set; } = string.Empty;
-
-    public int BlogId { get; set; } //Foreign Key
-    public Blog Blog { get; set; } = null!; //Navigation Property
 }
