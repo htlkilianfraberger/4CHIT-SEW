@@ -122,11 +122,12 @@
     {
         _selectedZone = _zones.FirstOrDefault(z => z.Id == DefaultCityId) ?? _zones[2];
         Tick();
-        _timer = new Timer(200);
+    
+        // Timer auf 33ms für flüssige Bewegung (ca. 30 FPS)
+        _timer = new Timer(33); 
         _timer.Elapsed += (_, _) => { Tick(); InvokeAsync(StateHasChanged); };
         _timer.Start();
     }
-
     private void SelectZone(ZoneEntry z) { _selectedZone = z; Tick(); }
 
     private DateTime GetLocalNow()
@@ -149,13 +150,24 @@
     {
         _now = GetLocalNow();
 
-        double hourFraction = (_now.Hour % 12) + (_now.Minute / 60.0);
-        double minFraction = _now.Minute + (_now.Second / 60.0);
-        
+        // Millisekunden-Anteil berechnen (0.0 bis 0.999)
+        double msecFraction = _now.Millisecond / 1000.0;
+    
+        // Nahtlose Sekunden: Ganze Sekunden + Millisekunden
+        double secFraction = _now.Second + msecFraction;
+    
+        // Nahtlose Minuten: Ganze Minuten + (Sekundenanteil / 60)
+        double minFraction = _now.Minute + (secFraction / 60.0);
+    
+        // Nahtlose Stunden: Ganze Stunden + (Minutenanteil / 60)
+        double hourFraction = (_now.Hour % 12) + (minFraction / 60.0);
+
+        // Winkelberechnung (Radiant)
         _hrRad  = DegToRad(hourFraction * 30.0);
         _minRad = DegToRad(minFraction * 6.0);
-        _secRad = DegToRad(_now.Second * 6.0);
+        _secRad = DegToRad(secFraction * 6.0);
 
+        // Positionen der Zeigerspitzen berechnen
         _hourTip = Pt(_hrRad, HourLen);
         _minTip  = Pt(_minRad, MinLen);
         _secTip  = Pt(_secRad, SecLen);
