@@ -1,0 +1,323 @@
+﻿@implements IAsyncDisposable
+@using System.Timers
+
+<div class="clock-component">
+    <div class="clock-card">
+        <div class="city-label">@_selectedZone.CityName</div>
+        <div class="date-label">@_now.ToString("dddd, MMMM d")</div>
+
+        <div class="clock-wrap">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
+                 aria-label="Analog clock showing @_now.ToString("HH:mm:ss")">
+
+                <defs>
+                    <radialGradient id="faceGrad" cx="50%" cy="40%" r="60%">
+                        <stop offset="0%" stop-color="#1e1e2e" />
+                        <stop offset="100%" stop-color="#11111f" />
+                    </radialGradient>
+                    <filter id="hs">
+                        <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="rgba(0,0,0,0.6)" />
+                    </filter>
+                </defs>
+
+                <!-- Uhrgehäuse -->
+                <circle cx="100" cy="100" r="98" fill="#0a0a18" />
+                <circle cx="100" cy="100" r="95" fill="none" stroke="#c9a84c" stroke-width="0.8" opacity="0.6" />
+                <circle cx="100" cy="100" r="91" fill="url(#faceGrad)" />
+                <circle cx="100" cy="100" r="87" fill="none" stroke="#c9a84c" stroke-width="0.4" opacity="0.3" />
+
+                <!-- Markierungen (Minuten/Stunden) -->
+                @for (int i = 0; i < 60; i++)
+                {
+                    bool isHour = (i % 5 == 0);
+                    double aRad = i * 6.0 * Math.PI / 180.0;
+                    double outerR = 84, innerR = isHour ? 74 : 80;
+                    <line x1="@Fmt(100 + outerR * Math.Sin(aRad))" y1="@Fmt(100 - outerR * Math.Cos(aRad))"
+                          x2="@Fmt(100 + innerR * Math.Sin(aRad))" y2="@Fmt(100 - innerR * Math.Cos(aRad))"
+                          stroke="@(isHour ? "#c9a84c" : "#ffffff")"
+                          stroke-width="@(isHour ? "1.8" : "0.7")"
+                          stroke-linecap="round"
+                          opacity="@(isHour ? "0.9" : "0.25")" />
+                }
+
+                <!-- Ziffern -->
+                @for (int h = 1; h <= 12; h++)
+                {
+                    double aRad = h * 30.0 * Math.PI / 180.0;
+                    double r = 67;
+                    double x = 100 + r * Math.Sin(aRad);
+                    double y = 100 - r * Math.Cos(aRad);
+                    @((MarkupString)$"<text x=\"{Fmt(x)}\" y=\"{Fmt(y)}\" text-anchor=\"middle\" dominant-baseline=\"central\" class=\"numeral\">{h}</text>")
+                }
+
+                <!-- Stundenzeiger -->
+                <line x1="@Fmt(100 - 10 * Math.Sin(_hrRad))" y1="@Fmt(100 + 10 * Math.Cos(_hrRad))"
+                      x2="@Fmt(_hourTip.X)" y2="@Fmt(_hourTip.Y)"
+                      stroke="#e8dcc8" stroke-width="5.5" stroke-linecap="round" filter="url(#hs)" />
+
+                <!-- Minutenzeiger -->
+                <line x1="@Fmt(100 - 12 * Math.Sin(_minRad))" y1="@Fmt(100 + 12 * Math.Cos(_minRad))"
+                      x2="@Fmt(_minTip.X)" y2="@Fmt(_minTip.Y)"
+                      stroke="#e8dcc8" stroke-width="3.5" stroke-linecap="round" filter="url(#hs)" />
+
+                <!-- Sekundenzeiger -->
+                <line x1="@Fmt(_secTail.X)" y1="@Fmt(_secTail.Y)"
+                      x2="@Fmt(_secTip.X)" y2="@Fmt(_secTip.Y)"
+                      stroke="#e8472b" stroke-width="1.8" stroke-linecap="round" />
+
+                <!-- Achse -->
+                <circle cx="100" cy="100" r="5" fill="#c9a84c" stroke="#e8dcc8" stroke-width="1.5" />
+                <circle cx="100" cy="100" r="2" fill="#11111f" />
+            </svg>
+        </div>
+
+        <div class="digital-time">@_now.ToString("HH:mm:ss")</div>
+        <div class="utc-offset">UTC @_selectedZone.OffsetLabel</div>
+    </div>
+
+    @if (ShowTimezonePicker)
+    {
+        <div class="tz-section">
+            <div class="tz-label">Select timezone</div>
+            <div class="tz-grid">
+                @foreach (var zone in _zones)
+                {
+                    bool active = zone.Id == _selectedZone.Id;
+                    <button class="tz-btn @(active ? "tz-btn--active" : "")"
+                            @onclick="() => SelectZone(zone)">
+                        <span class="tz-city">@zone.CityName</span>
+                        <span class="tz-time">@GetZoneTime(zone)</span>
+                    </button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string DefaultCityId { get; set; } = "vienna";
+    [Parameter] public bool ShowTimezonePicker { get; set; } = true;
+
+    private record ZoneEntry(string Id, string CityName, string OffsetLabel, string IanaId);
+
+    private static readonly ZoneEntry[] _zones = [
+        new("utc", "UTC", "+00:00", "UTC"),
+        new("london", "London", "+01:00", "Europe/London"),
+        new("vienna", "Vienna", "+02:00", "Europe/Vienna"),
+        new("dubai", "Dubai", "+04:00", "Asia/Dubai"),
+        new("tokyo", "Tokyo", "+09:00", "Asia/Tokyo"),
+        new("sydney", "Sydney", "+10:00", "Australia/Sydney"),
+        new("nyc", "New York", "-04:00", "America/New_York"),
+        new("la", "Los Angeles", "-07:00", "America/Los_Angeles")
+    ];
+
+    private ZoneEntry _selectedZone = default!;
+    private DateTime _now = DateTime.UtcNow;
+    private Timer _timer = null!;
+    private double _hrRad, _minRad, _secRad;
+    private (double X, double Y) _hourTip, _minTip, _secTip, _secTail;
+    private const double HourLen = 44, MinLen = 62, SecLen = 72, SecTailLen = 16;
+
+    protected override void OnInitialized()
+    {
+        _selectedZone = _zones.FirstOrDefault(z => z.Id == DefaultCityId) ?? _zones[2];
+        Tick();
+        _timer = new Timer(200);
+        _timer.Elapsed += (_, _) => { Tick(); InvokeAsync(StateHasChanged); };
+        _timer.Start();
+    }
+
+    private void SelectZone(ZoneEntry z) { _selectedZone = z; Tick(); }
+
+    private DateTime GetLocalNow()
+    {
+        try {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(_selectedZone.IanaId);
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
+        } catch { return DateTime.UtcNow; }
+    }
+
+    private string GetZoneTime(ZoneEntry z)
+    {
+        try {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(z.IanaId);
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).ToString("HH:mm");
+        } catch { return "--:--"; }
+    }
+
+    private void Tick()
+    {
+        _now = GetLocalNow();
+
+        double hourFraction = (_now.Hour % 12) + (_now.Minute / 60.0);
+        double minFraction = _now.Minute + (_now.Second / 60.0);
+        
+        _hrRad  = DegToRad(hourFraction * 30.0);
+        _minRad = DegToRad(minFraction * 6.0);
+        _secRad = DegToRad(_now.Second * 6.0);
+
+        _hourTip = Pt(_hrRad, HourLen);
+        _minTip  = Pt(_minRad, MinLen);
+        _secTip  = Pt(_secRad, SecLen);
+        _secTail = Pt(_secRad + Math.PI, SecTailLen);
+    }
+
+    private static (double X, double Y) Pt(double rad, double len) =>
+        (100 + len * Math.Sin(rad), 100 - len * Math.Cos(rad));
+
+    private static double DegToRad(double d) => d * Math.PI / 180.0;
+    private static string Fmt(double v) => v.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_timer != null) { _timer.Stop(); _timer.Dispose(); }
+        await Task.CompletedTask;
+    }
+}
+
+<style>
+    /* 1. Haupt-Container: Erzwingt den dunklen Hintergrund für die ganze Komponente */
+    .clock-component {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        font-family: 'Georgia', serif;
+        background-color: #0c0c1a !important;
+        color: white;
+        width: 100%;
+        padding: 2rem 0;
+    }
+
+    /* 2. Uhr-Karte & Labels */
+    .clock-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        background: transparent !important;
+    }
+
+    .city-label {
+        font-size: 13px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: #c9a84c;
+        background: transparent !important;
+    }
+
+    .date-label {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.35);
+        background: transparent !important;
+    }
+
+    /* 3. Analoge Uhr (SVG) */
+    .clock-wrap {
+        width: 300px;
+        height: 300px;
+        background: transparent !important;
+    }
+
+    /* FIX: Entfernt graue Kästen um die Zahlen im SVG */
+    .numeral {
+        font-size: 9px;
+        font-weight: 700;
+        fill: rgba(201, 168, 76, 0.85);
+        user-select: none;
+        pointer-events: none;
+        background-color: transparent !important;
+    }
+
+    /* 4. Digitale Anzeige */
+    .digital-time {
+        font-size: 2.2rem;
+        letter-spacing: 6px;
+        color: #e8dcc8;
+        font-weight: 400;
+        background: transparent !important;
+    }
+
+    .utc-offset {
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.3);
+        text-transform: uppercase;
+        background: transparent !important;
+    }
+
+    /* 5. Zeitzonen-Auswahl (Grid) */
+    .tz-section {
+        width: 100%;
+        max-width: 520px;
+        padding: 0 20px;
+        background: transparent !important;
+    }
+
+    .tz-label {
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.25);
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .tz-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 12px;
+    }
+
+    /* 6. Button-Styling (Kritischer Bereich für die weißen Ränder) */
+    .tz-btn {
+        /* Entfernt Browser-Standard-Erscheinung */
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        border: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 8px;
+        padding: 12px 8px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s ease;
+        color: white;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* FIX: Verhindert graue/weiße Hintergründe auf den Text-Spans im Button */
+    .tz-city, .tz-time {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        display: block;
+    }
+
+    .tz-btn:hover {
+        background-color: rgba(201, 168, 76, 0.08) !important;
+        border-color: rgba(201, 168, 76, 0.3) !important;
+    }
+
+    /* Aktiver Button */
+    .tz-btn--active {
+        background-color: rgba(201, 168, 76, 0.12) !important;
+        border-color: rgba(201, 168, 76, 0.6) !important;
+    }
+
+    .tz-city { font-size: 12px; color: #e8dcc8; }
+    .tz-time { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.5); }
+
+    /* Textfarben für den aktiven Status */
+    .tz-btn--active .tz-city,
+    .tz-btn--active .tz-time {
+        color: #c9a84c !important;
+        background: transparent !important;
+    }
+</style>
