@@ -1,0 +1,128 @@
+﻿@implements IAsyncDisposable
+@using System.Timers
+@page "/"
+
+<div class="clock-shell" style="width:@(Size)px; height:@(Size)px;">
+    <svg class="clock-svg"
+         viewBox="0 0 200 200"
+         xmlns="http://www.w3.org/2000/svg"
+         aria-label="Analog clock showing @_now.ToString("HH:mm:ss")"
+         role="img">
+
+        <!-- Definitions: drop-shadow & radial gradient -->
+        <defs>
+            <radialGradient id="faceGrad" cx="45%" cy="35%" r="65%">
+                <stop offset="0%"   stop-color="#FDFAF3" />
+                <stop offset="100%" stop-color="#E8E0CC" />
+            </radialGradient>
+            <filter id="handShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="rgba(0,0,0,0.35)" />
+            </filter>
+        </defs>
+
+        <!-- Outer bezel & Face -->
+        <circle cx="100" cy="100" r="97" fill="#2B2B2B" />
+        <circle cx="100" cy="100" r="92" fill="url(#faceGrad)" />
+
+        <!-- Tick marks -->
+        @for (int i = 0; i < 60; i++)
+        {
+            bool isHour = (i % 5 == 0);
+            double aRad = i * 6.0 * Math.PI / 180.0;
+            double outerR = 88;
+            double innerR = isHour ? 78 : 84;
+
+            <line x1="@Fmt(100 + outerR * Math.Sin(aRad))" y1="@Fmt(100 - outerR * Math.Cos(aRad))"
+                  x2="@Fmt(100 + innerR * Math.Sin(aRad))" y2="@Fmt(100 - innerR * Math.Cos(aRad))"
+                  stroke="@(isHour ? "#222" : "#AAA")"
+                  stroke-width="@(isHour ? "2" : "0.9")"
+                  stroke-linecap="round" />
+        }
+
+        <!-- FIX: Hour numerals using MarkupString to avoid RZ1023 -->
+        @for (int h = 1; h <= 12; h++)
+        {
+            double aRad = h * 30.0 * Math.PI / 180.0;
+            double r = 70;
+            double x = 100 + r * Math.Sin(aRad);
+            double y = 100 - r * Math.Cos(aRad);
+
+            @((MarkupString)$"<text x=\"{Fmt(x)}\" y=\"{Fmt(y)}\" text-anchor=\"middle\" dominant-baseline=\"central\" class=\"numeral\">{h}</text>")
+        }
+
+        <!-- Hands -->
+        <line x1="100" y1="100" x2="@Fmt(_hourTip.X)" y2="@Fmt(_hourTip.Y)"
+              stroke="#1A1A1A" stroke-width="6" stroke-linecap="round" filter="url(#handShadow)" />
+
+        <line x1="100" y1="100" x2="@Fmt(_minTip.X)" y2="@Fmt(_minTip.Y)"
+              stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" filter="url(#handShadow)" />
+
+        <!-- Second hand -->
+        <line x1="100" y1="100" x2="@Fmt(_secTail.X)" y2="@Fmt(_secTail.Y)" stroke="#D42B2B" stroke-width="2" />
+        <line x1="100" y1="100" x2="@Fmt(_secTip.X)" y2="@Fmt(_secTip.Y)" stroke="#D42B2B" stroke-width="2" />
+
+        <circle cx="100" cy="100" r="4.5" fill="#D42B2B" stroke="#111" stroke-width="1.5" />
+
+        <!-- FIX: Brand text -->
+        @((MarkupString)"<text x=\"100\" y=\"130\" text-anchor=\"middle\" class=\"brand\">BLAZOR</text>")
+
+    </svg>
+</div>
+
+@code {
+    [Parameter] public int Size { get; set; } = 300;
+    [Parameter] public int IntervalMs { get; set; } = 50;
+
+    private DateTime _now = DateTime.Now;
+    private Timer _timer = null!;
+    private (double X, double Y) _hourTip, _minTip, _secTip, _secTail;
+
+    private const double HourLen = 48, MinLen = 65, SecLen = 74, SecTailLen = 18;
+
+    protected override void OnInitialized()
+    {
+        ComputeHandPositions();
+        _timer = new Timer(IntervalMs);
+        _timer.Elapsed += OnTimerElapsed;
+        _timer.Start();
+    }
+
+    private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+    {
+        _now = DateTime.Now;
+        ComputeHandPositions();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void ComputeHandPositions()
+    {
+        double h = _now.Hour % 12, min = _now.Minute, sec = _now.Second, ms = _now.Millisecond;
+
+        double secRad = DegToRad(sec * 6.0 + ms * 0.006);
+        double minRad = DegToRad(min * 6.0 + sec * 0.1);
+        double hrRad = DegToRad(h * 30.0 + min * 0.5);
+
+        _hourTip = HandPoint(hrRad, HourLen);
+        _minTip = HandPoint(minRad, MinLen);
+        _secTip = HandPoint(secRad, SecLen);
+        _secTail = HandPoint(secRad + Math.PI, SecTailLen);
+    }
+
+    private static (double X, double Y) HandPoint(double rad, double length) => (100 + length * Math.Sin(rad), 100 - length * Math.Cos(rad));
+    private static double DegToRad(double deg) => deg * Math.PI / 180.0;
+    private static string Fmt(double v) => v.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+
+    public async ValueTask DisposeAsync()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();
+        await Task.CompletedTask;
+    }
+}
+
+<style>
+    .clock-shell { display: inline-block; border-radius: 50%; overflow: hidden; }
+    .clock-svg { display: block; width: 100%; height: 100%; }
+    .numeral { font-family: 'Georgia', serif; font-size: 10px; font-weight: 700; fill: #1A1A1A; user-select: none; }
+    .brand { font-family: 'Georgia', serif; font-size: 5px; fill: #9A9080; letter-spacing: 1.5px; user-select: none; }
+</style>
