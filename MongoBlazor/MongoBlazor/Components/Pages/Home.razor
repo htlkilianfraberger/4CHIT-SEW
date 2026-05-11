@@ -1,0 +1,44 @@
+﻿@page "/"
+@using MongoDB.Driver
+@inject IMongoCollection<Department> DeptCollection
+
+<h3>Abteilungen aus MongoDB</h3>
+
+@if (deptList == null)
+{
+    <p>Verbindung wird aufgebaut...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nr</th>
+            <th>Name</th>
+            <th>Ort</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var d in deptList)
+        {
+            <tr>
+                <td style="font-family: monospace; font-size: 0.8rem;">@d.Id</td>
+                <td>@d.DeptNo</td>
+                <td>@d.DName</td>
+                <td>@d.Loc</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Department>? deptList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        deptList = await DeptCollection.Find(_ => true).ToListAsync();
+    }
+
+}
