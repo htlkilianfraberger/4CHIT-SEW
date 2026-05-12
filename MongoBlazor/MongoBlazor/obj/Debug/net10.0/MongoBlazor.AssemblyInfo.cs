@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MongoBlazor")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a39f2fe8a7d98cf13d45cf093267b176dc08e1f1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6543aad1b6410ec1c412714f66e6c61f2f30e03d")]
 [assembly: System.Reflection.AssemblyProductAttribute("MongoBlazor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MongoBlazor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

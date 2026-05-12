@@ -1,44 +1,108 @@
 ﻿@page "/"
+@using MongoDB.Bson
 @using MongoDB.Driver
-@inject IMongoCollection<Department> DeptCollection
+@inject IMongoClient Client
+@rendermode InteractiveServer
 
-<h3>Abteilungen aus MongoDB</h3>
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label>Datenbank:</label>
+            @* Wichtig: @onchange bindet die Methode, die Collections lädt *@
+            <select class="form-select" @onchange="OnDatabaseSelected">
+                <option value="">Wähle Datenbank...</option>
+                @foreach (var db in dbNames)
+                {
+                    <option value="@db">@db</option>
+                }
+            </select>
+        </div>
 
-@if (deptList == null)
-{
-    <p>Verbindung wird aufgebaut...</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nr</th>
-            <th>Name</th>
-            <th>Ort</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var d in deptList)
-        {
-            <tr>
-                <td style="font-family: monospace; font-size: 0.8rem;">@d.Id</td>
-                <td>@d.DeptNo</td>
-                <td>@d.DName</td>
-                <td>@d.Loc</td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+        <div class="col-md-4">
+            <label>Collection:</label>
+            @* Das Dropdown wird erst aktiv, wenn eine DB gewählt wurde *@
+            <select class="form-select" @onchange="OnCollectionSelected" disabled="@(string.IsNullOrEmpty(selectedDb))">
+                <option value="">Wähle Collection...</option>
+                @foreach (var coll in collectionNames)
+                {
+                    <option value="@coll">@coll</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (documents != null && documents.Any())
+    {
+        <table class="table mt-4">
+            <thead>
+                <tr>
+                    @foreach (var head in headers)
+                    {
+                        <th>@head</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var doc in documents)
+                {
+                    <tr>
+                        @foreach (var head in headers)
+                        {
+                            <td>@(doc.Contains(head) ? doc[head].ToString() : "")</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
 
 @code {
-    private List<Department>? deptList;
+    private List<string> dbNames = new();
+    private List<string> collectionNames = new();
+    private List<BsonDocument> documents = new();
+    private HashSet<string> headers = new();
+    private string selectedDb = "";
 
     protected override async Task OnInitializedAsync()
     {
-        deptList = await DeptCollection.Find(_ => true).ToListAsync();
+        // Lädt die Liste der Datenbanken beim Start
+        using var cursor = await Client.ListDatabaseNamesAsync();
+        dbNames = await cursor.ToListAsync();
     }
 
+    private async Task OnDatabaseSelected(ChangeEventArgs e)
+    {
+        selectedDb = e.Value?.ToString() ?? "";
+        collectionNames.Clear();
+        documents.Clear();
+
+        if (!string.IsNullOrEmpty(selectedDb))
+        {
+            // Lädt die Collections für die ausgewählte Datenbank
+            var db = Client.GetDatabase(selectedDb);
+            using var cursor = await db.ListCollectionNamesAsync();
+            collectionNames = await cursor.ToListAsync();
+        }
+    }
+
+    private async Task OnCollectionSelected(ChangeEventArgs e)
+    {
+        var selectedColl = e.Value?.ToString() ?? "";
+        if (!string.IsNullOrEmpty(selectedDb) && !string.IsNullOrEmpty(selectedColl))
+        {
+            var collection = Client.GetDatabase(selectedDb).GetCollection<BsonDocument>(selectedColl);
+            documents = await collection.Find(new BsonDocument()).ToListAsync();
+
+            // Erstellt die Spaltenliste durch Scannen der Dokumente
+            headers.Clear();
+            foreach (var doc in documents)
+            {
+                foreach (var elem in doc.Elements)
+                {
+                    headers.Add(elem.Name);
+                }
+            }
+        }
+    }
 }

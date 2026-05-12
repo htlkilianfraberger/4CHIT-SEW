@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\kilia\\Docker\\Syt-D\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj": {}
+    "C:\\Users\\kilia\\Github\\4CHIT-SEW\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj": {}
   },
   "projects": {
-    "C:\\Users\\kilia\\Docker\\Syt-D\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj": {
+    "C:\\Users\\kilia\\Github\\4CHIT-SEW\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\kilia\\Docker\\Syt-D\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj",
+        "projectUniqueName": "C:\\Users\\kilia\\Github\\4CHIT-SEW\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj",
         "projectName": "MongoBlazor",
-        "projectPath": "C:\\Users\\kilia\\Docker\\Syt-D\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj",
+        "projectPath": "C:\\Users\\kilia\\Github\\4CHIT-SEW\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj",
         "packagesPath": "C:\\Users\\kilia\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\kilia\\Docker\\Syt-D\\MongoBlazor\\MongoBlazor\\obj\\",
+        "outputPath": "C:\\Users\\kilia\\Github\\4CHIT-SEW\\MongoBlazor\\MongoBlazor\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

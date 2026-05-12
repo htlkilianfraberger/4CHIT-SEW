@@ -1,25 +1,26 @@
-using MongoBlazor;
-using MongoBlazor.Components;
 using MongoDB.Driver;
+using MongoBlazor.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Blazor Services hinzufügen
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// MongoDB Client als Singleton registrieren
+// Ermöglicht Zugriff auf ListDatabaseNames() und GetDatabase() in den Components
 var mongoClient = new MongoClient("mongodb://localhost:27017");
-var database = mongoClient.GetDatabase("scott");
-builder.Services.AddSingleton(database.GetCollection<Department>("depts"));
+builder.Services.AddSingleton<IMongoClient>(mongoClient);
 
 var app = builder.Build();
 
+// HTTP-Pipeline konfigurieren
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
 
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 app.MapStaticAssets();
