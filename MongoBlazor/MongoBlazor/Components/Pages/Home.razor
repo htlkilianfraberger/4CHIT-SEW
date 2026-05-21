@@ -8,26 +8,12 @@
     <div class="row mb-3">
         <div class="col-md-4">
             <label>Datenbank:</label>
-            @* Wichtig: @onchange bindet die Methode, die Collections lädt *@
-            <select class="form-select" @onchange="OnDatabaseSelected">
-                <option value="">Wähle Datenbank...</option>
-                @foreach (var db in dbNames)
-                {
-                    <option value="@db">@db</option>
-                }
-            </select>
+            <Selector Names="dbNames" OnSelected="OnDatabaseSelected" Title="Datenbank"></Selector>
         </div>
 
         <div class="col-md-4">
             <label>Collection:</label>
-            @* Das Dropdown wird erst aktiv, wenn eine DB gewählt wurde *@
-            <select class="form-select" @onchange="OnCollectionSelected" disabled="@(string.IsNullOrEmpty(selectedDb))">
-                <option value="">Wähle Collection...</option>
-                @foreach (var coll in collectionNames)
-                {
-                    <option value="@coll">@coll</option>
-                }
-            </select>
+            <Selector Names="collectionNames" OnSelected="OnCollectionSelected" Title="Collection"></Selector>
         </div>
     </div>
 

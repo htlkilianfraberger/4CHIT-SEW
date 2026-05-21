@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "klNw4IudSTw=",
+  "dgSpecHash": "FJB9i4KoCLg=",
   "success": true,
   "projectFilePath": "C:\\Users\\kilia\\Github\\4CHIT-SEW\\MongoBlazor\\MongoBlazor\\MongoBlazor.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\kilia\\.nuget\\packages\\dnsclient\\1.6.1\\dnsclient.1.6.1.nupkg.sha512",
-    "C:\\Users\\kilia\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.7\\microsoft.aspnetcore.app.internal.assets.10.0.7.nupkg.sha512",
+    "C:\\Users\\kilia\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.8\\microsoft.aspnetcore.app.internal.assets.10.0.8.nupkg.sha512",
     "C:\\Users\\kilia\\.nuget\\packages\\mongodb.bson\\3.8.0\\mongodb.bson.3.8.0.nupkg.sha512",
     "C:\\Users\\kilia\\.nuget\\packages\\mongodb.driver\\3.8.0\\mongodb.driver.3.8.0.nupkg.sha512",
     "C:\\Users\\kilia\\.nuget\\packages\\sharpcompress\\0.30.1\\sharpcompress.0.30.1.nupkg.sha512",

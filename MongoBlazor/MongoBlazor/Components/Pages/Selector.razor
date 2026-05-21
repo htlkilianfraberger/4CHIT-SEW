@@ -1,0 +1,15 @@
+﻿@using System.Reflection
+
+
+<select class="form-select" @onchange="(ChangeEventArgs e) => OnSelected.InvokeAsync(e)">
+    <option value="">Wähle @Title...</option>
+    @foreach (var db in Names)
+    {
+        <option value="@db">@db</option>
+    }
+</select>
+@code {
+    [Parameter] public List<string> Names { get; set; }
+    [Parameter] public EventCallback<ChangeEventArgs> OnSelected { get; set; }
+    [Parameter] public string Title { get; set; }
+}

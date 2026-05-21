@@ -170,8 +170,6 @@ C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compre
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\61pctevm3p-{0}-4d85u1mtcx-4d85u1mtcx.gz
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\uph9n85plm-{0}-0j3bgjxly4-0j3bgjxly4.gz
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\kz7lujwfs6-{0}-abdmv1u4y3-abdmv1u4y3.gz
-C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\ge15q4x754-{0}-hwaxidwiwj-hwaxidwiwj.gz
-C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\v3lcr6hnhz-{0}-xbbil6v7co-xbbil6v7co.gz
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\2o4xttesca-{0}-zejk95g703-zejk95g703.gz
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\2elqr51uqi-{0}-zejk95g703-zejk95g703.gz
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\staticwebassets.build.json
@@ -185,3 +183,5 @@ C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\refint
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\MongoBlazor.pdb
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\MongoBlazor.genruntimeconfig.cache
 C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\ref\MongoBlazor.dll
+C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\ge15q4x754-{0}-ej96puwv3k-ej96puwv3k.gz
+C:\Users\kilia\Github\4CHIT-SEW\MongoBlazor\MongoBlazor\obj\Debug\net10.0\compressed\v3lcr6hnhz-{0}-cj5793hgrt-cj5793hgrt.gz
