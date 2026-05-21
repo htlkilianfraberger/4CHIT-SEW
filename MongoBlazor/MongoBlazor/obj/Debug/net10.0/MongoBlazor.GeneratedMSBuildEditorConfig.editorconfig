@@ -38,12 +38,12 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/Pages/NotFound.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xOb3RGb3VuZC5yYXpvcg==
+[C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/Pages/Home2.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb21lMi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/Pages/Selector.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTZWxlY3Rvci5yYXpvcg==
+[C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/Pages/NotFound.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xOb3RGb3VuZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/Pages/Weather.razor]
@@ -52,6 +52,18 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/Routes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSb3V0ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/Selector.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTZWxlY3Rvci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/SimpleSelector.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaW1wbGVTZWxlY3Rvci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/SimpleSelectorKi.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTaW1wbGVTZWxlY3RvcktpLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/kilia/Github/4CHIT-SEW/MongoBlazor/MongoBlazor/Components/_Imports.razor]

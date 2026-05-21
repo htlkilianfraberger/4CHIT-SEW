@@ -1,0 +1,99 @@
+﻿@page "/Home2"
+@using MongoDB.Bson
+@using MongoDB.Driver
+@inject IMongoClient Client
+@rendermode InteractiveServer
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Datenbank:</label>
+            <SimpleSelector @bind-Selected="selectedDb" 
+                            DisplayNames="dbNames" 
+                            OnChanged="ReloadCollections_" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Collection:</label>
+            <SimpleSelectorKi @bind-Selected="selectedCollection" 
+                            DisplayNames="collectionNames" 
+                            OnChanged="ReloadCollection_" 
+                            disabled="@(string.IsNullOrEmpty(selectedDb))" />
+        </div>
+    </div>
+
+    @if (documents != null && documents.Any())
+    {
+        <table class="table table-striped table-bordered mt-4">
+            <thead class="table-dark">
+                <tr>
+                    @foreach (var head in headers)
+                    {
+                        <th>@head</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var doc in documents)
+                {
+                    <tr>
+                        @foreach (var head in headers)
+                        {
+                            <td>@(doc.Contains(head) ? doc[head].ToString() : "")</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<string> dbNames = new();
+    private List<string>? collectionNames = null;
+    private List<BsonDocument>? documents = null;
+    private HashSet<string> headers = new();
+    
+    private string? selectedDb = "";
+    private string? selectedCollection = "";
+    private IMongoDatabase? _mydatabase;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var cursor = await Client.ListDatabaseNamesAsync();
+        dbNames = await cursor.ToListAsync();
+    }
+    
+    private async Task ReloadCollections_(string? newDB)
+    {
+        collectionNames = null;
+        selectedDb = newDB;
+        documents = null;
+
+        if (string.IsNullOrEmpty(selectedDb)) return;
+
+        _mydatabase = Client.GetDatabase(selectedDb);
+        using var listCursor = await _mydatabase.ListCollectionNamesAsync();
+        collectionNames = await listCursor.ToListAsync();
+    }
+    
+    private async Task ReloadCollection_(string? newCollection)
+    {
+        selectedCollection = newCollection;
+        documents = null; 
+        headers.Clear();
+
+        if (string.IsNullOrEmpty(selectedDb) || string.IsNullOrEmpty(selectedCollection) || _mydatabase == null) return;
+
+        var collection = _mydatabase.GetCollection<BsonDocument>(selectedCollection);
+        documents = await collection.Find(new BsonDocument()).ToListAsync();
+        
+        foreach (var doc in documents)
+        {
+            foreach (var elem in doc.Elements)
+            {
+                headers.Add(elem.Name);
+            }
+        }
+    }
+}

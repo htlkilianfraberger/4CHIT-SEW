@@ -1,0 +1,30 @@
+﻿<InputSelect class="form-select" 
+             @bind-Value="Selected" 
+             @bind-Value:after="HandleSubmit" 
+             disabled="@Disabled">
+             
+    <option value="">Bitte wählen...</option>
+    @if (DisplayNames != null)
+    {
+        @foreach (var name in DisplayNames)
+        {
+            <option value="@name">@name</option>
+        }
+    }
+</InputSelect>
+
+@code {
+    [Parameter] public string? Selected { get; set; }
+    [Parameter] public List<string>? DisplayNames { get; set; }
+    [Parameter] public EventCallback<string?> SelectedChanged { get; set; }
+    [Parameter] public EventCallback<string?> OnChanged { get; set; }
+    
+    // 1. Hier den Parameter für Blazor registrieren
+    [Parameter] public bool Disabled { get; set; } 
+
+    private async Task HandleSubmit()
+    {
+        await SelectedChanged.InvokeAsync(Selected);
+        await OnChanged.InvokeAsync(Selected);
+    }
+}
